@@ -6,6 +6,9 @@ CACHE_SLEEP=${2:-60}
 TOTAL_STEPS=${3:-5}
 PREVIOUS_STEP_NUMBER=$((STEP_NUMBER - 1))
 
+# Record when this job started
+JOB_START_TIME=$(date +%H:%M:%S)
+
 mkdir -p cache-meta
 
 # Check cache status based on existing cache-meta files  
@@ -38,7 +41,7 @@ else
   
   # Check if this is the last step from a previous build (which should be considered Hot)
   if [ "$LATEST_STEP" -eq "$TOTAL_STEPS" ]; then
-    CACHE_STATUS="🔥 \`Hot\` \`build: $LATEST_BUILD\` \`step: npm install #$LATEST_STEP\` (last step) \`touched: $LAST_TOUCHED\` \`age: ${AGE_SECONDS}s\`"
+    CACHE_STATUS="🔥 \`Hot\` \`build: $LATEST_BUILD\` \`step: npm install #$LATEST_STEP (last step)\` \`touched: $LAST_TOUCHED\` \`age: ${AGE_SECONDS}s\`"
   else
     CACHE_STATUS="🧊 \`Cool\` \`build: $LATEST_BUILD\` \`step: npm install #$LATEST_STEP\` \`touched: $LAST_TOUCHED\` \`age: ${AGE_SECONDS}s\`"
   fi
@@ -83,21 +86,21 @@ else
   SLEEP_DISPLAY="\`${CACHE_SLEEP}s\`"
 fi
 DURATION_DISPLAY="\`${DURATION}s\`"
-buildkite-agent meta-data set "benchmark-step-$STEP_NUMBER" "$STEP_NUMBER|$SLEEP_DISPLAY|$DURATION_DISPLAY|$CACHE_STATUS"
+buildkite-agent meta-data set "benchmark-step-$STEP_NUMBER" "$STEP_NUMBER|\`$JOB_START_TIME\`|$SLEEP_DISPLAY|$DURATION_DISPLAY|$CACHE_STATUS"
 
 # Rebuild the entire annotation table
 TABLE_HEADER="### Cache Volume Benchmark Results
 
-| Step | Sleep | Duration | Cache Status |
-|------|-------|----------|--------------|"
+| Step | Started | Sleep | Duration | Cache Status |
+|------|---------|-------|----------|--------------|"
 
 TABLE_ROWS=""
 for ((step=1; step<=STEP_NUMBER; step++)); do
   STEP_DATA=$(buildkite-agent meta-data get "benchmark-step-$step" 2>/dev/null || echo "")
   if [ -n "$STEP_DATA" ]; then
-    IFS='|' read -r step_num sleep_display duration_display cache_status <<< "$STEP_DATA"
+    IFS='|' read -r step_num started_time sleep_display duration_display cache_status <<< "$STEP_DATA"
     TABLE_ROWS="${TABLE_ROWS}
-| \`npm install #$step_num\` | $sleep_display | $duration_display | $cache_status |"
+| \`npm install #$step_num\` | $started_time | $sleep_display | $duration_display | $cache_status |"
   fi
 done
 

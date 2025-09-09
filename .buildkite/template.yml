@@ -1,0 +1,20 @@
+name: "Cache Volumes Benchmarking"
+description: "Benchmark npm install performance with cache volumes"
+steps:
+  - input: "Cache Test Configuration"
+    key: cache-config
+    fields:
+      - text: "Number of npm install repetitions"
+        key: "repeat"
+        default: "2"
+        hint: "How many times to run npm install"
+      - text: "Cache Sleep (seconds)"
+        key: "cache_sleep"
+        default: "60"
+        hint: "How long to wait between each npm install"
+  
+  - wait
+  
+  - label: ":gear: Generate pipeline"
+    command: |
+      ./.buildkite/generate-pipeline.sh

@@ -1,5 +1,7 @@
 # Buildkite Cache Volumes Benchmarking
 
+[![Add to Buildkite](https://buildkite.com/button.svg)](https://buildkite.com/new?template=https://github.com/dbr787/buildkite-cache-volumes-benchmarking)
+
 This repository benchmarks Buildkite's cache volumes functionality by simulating cache hits and misses through repeated npm install commands with configurable delays. It helps visualize and measure the performance difference between cold (cache miss) and warm (cache hit) scenarios.
 
 ## Usage
@@ -13,7 +15,7 @@ This repository benchmarks Buildkite's cache volumes functionality by simulating
 ## How it works
 
 1. The main pipeline (`.buildkite/pipeline.yml`) collects user input
-2. The generator script (`scripts/generate-pipeline.sh`) creates a dynamic pipeline based on the input
+2. The generator script (`.buildkite/generate-pipeline.sh`) creates a dynamic pipeline based on the input
 3. The generated pipeline:
    - Creates cache marker files for each run
    - Runs npm install N times
@@ -41,5 +43,6 @@ The script generates:
 ## Files
 
 - `.buildkite/pipeline.yml` - Main pipeline definition
-- `scripts/generate-pipeline.sh` - Dynamic pipeline generator
+- `.buildkite/generate-pipeline.sh` - Dynamic pipeline generator
+- `.buildkite/template.yml` - Template for "Add to Buildkite" button
 - Generated `cache-meta/` files track each build and step

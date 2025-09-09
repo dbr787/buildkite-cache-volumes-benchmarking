@@ -14,22 +14,22 @@ EXISTING_FILES=$(ls cache-meta/ 2>/dev/null || true)
 CURRENT_TIME=$(date +%s)
 
 if [ -z "$EXISTING_FILES" ]; then
-  CACHE_STATUS="❄️ Cold"
-  CACHE_AGE="N/A"
+  CACHE_STATUS="❄️ \`Cold\`"
+  CACHE_AGE="\`N/A\`"
 elif [ -f "cache-meta/$PREVIOUS_STEP_FILE" ]; then
   LAST_TOUCHED_TIME=$(stat -c %Y "cache-meta/$PREVIOUS_STEP_FILE")
   LAST_TOUCHED=$(stat -c %y "cache-meta/$PREVIOUS_STEP_FILE" | cut -d' ' -f2 | cut -d'.' -f1)
   AGE_SECONDS=$((CURRENT_TIME - LAST_TOUCHED_TIME))
-  CACHE_AGE="${AGE_SECONDS}s"
-  CACHE_STATUS="🔥 Hot \`build: $BUILDKITE_BUILD_NUMBER\` \`step: npm install #$PREVIOUS_STEP_NUMBER\` \`touched: $LAST_TOUCHED\`"
+  CACHE_AGE="\`${AGE_SECONDS}s\`"
+  CACHE_STATUS="🔥 \`Hot\` \`build: $BUILDKITE_BUILD_NUMBER\` \`step: npm install #$PREVIOUS_STEP_NUMBER\` \`touched: $LAST_TOUCHED\`"
 elif ls cache-meta/build-$BUILDKITE_BUILD_NUMBER-step-* 2>/dev/null >/dev/null; then
   LATEST_FILE=$(ls -t cache-meta/build-$BUILDKITE_BUILD_NUMBER-step-* 2>/dev/null | head -1)
   LATEST_STEP=$(basename "$LATEST_FILE" | sed 's/build-[0-9]*-step-install-//')
   LAST_TOUCHED_TIME=$(stat -c %Y "$LATEST_FILE")
   LAST_TOUCHED=$(stat -c %y "$LATEST_FILE" | cut -d' ' -f2 | cut -d'.' -f1)
   AGE_SECONDS=$((CURRENT_TIME - LAST_TOUCHED_TIME))
-  CACHE_AGE="${AGE_SECONDS}s"
-  CACHE_STATUS="☀️ Warm \`build: $BUILDKITE_BUILD_NUMBER\` \`step: npm install #$LATEST_STEP\` \`touched: $LAST_TOUCHED\`"
+  CACHE_AGE="\`${AGE_SECONDS}s\`"
+  CACHE_STATUS="☀️ \`Warm\` \`build: $BUILDKITE_BUILD_NUMBER\` \`step: npm install #$LATEST_STEP\` \`touched: $LAST_TOUCHED\`"
 else
   LATEST_FILE=$(ls -t cache-meta/ 2>/dev/null | head -1)
   LATEST_BUILD=$(basename "$LATEST_FILE" | sed 's/build-\([0-9]*\)-step-install-.*/\1/')
@@ -37,8 +37,8 @@ else
   LAST_TOUCHED_TIME=$(stat -c %Y "cache-meta/$LATEST_FILE")
   LAST_TOUCHED=$(stat -c %y "cache-meta/$LATEST_FILE" | cut -d' ' -f2 | cut -d'.' -f1)
   AGE_SECONDS=$((CURRENT_TIME - LAST_TOUCHED_TIME))
-  CACHE_AGE="${AGE_SECONDS}s"
-  CACHE_STATUS="🧊 Cool \`build: $LATEST_BUILD\` \`step: npm install #$LATEST_STEP\` \`touched: $LAST_TOUCHED\`"
+  CACHE_AGE="\`${AGE_SECONDS}s\`"
+  CACHE_STATUS="🧊 \`Cool\` \`build: $LATEST_BUILD\` \`step: npm install #$LATEST_STEP\` \`touched: $LAST_TOUCHED\`"
 fi
 
 touch "cache-meta/build-$BUILDKITE_BUILD_NUMBER-step-install-$STEP_NUMBER"
@@ -75,11 +75,12 @@ DURATION=$((END_TIME - START_TIME))
 # Store results in build metadata for table reconstruction
 # For step 1, sleep is N/A since there's no sleep before the first step
 if [ "$STEP_NUMBER" -eq 1 ]; then
-  SLEEP_DISPLAY="N/A"
+  SLEEP_DISPLAY="\`N/A\`"
 else
-  SLEEP_DISPLAY="${CACHE_SLEEP}s"
+  SLEEP_DISPLAY="\`${CACHE_SLEEP}s\`"
 fi
-buildkite-agent meta-data set "benchmark-step-$STEP_NUMBER" "$STEP_NUMBER|$SLEEP_DISPLAY|$DURATION|$CACHE_AGE|$CACHE_STATUS"
+DURATION_DISPLAY="\`${DURATION}s\`"
+buildkite-agent meta-data set "benchmark-step-$STEP_NUMBER" "$STEP_NUMBER|$SLEEP_DISPLAY|$DURATION_DISPLAY|$CACHE_AGE|$CACHE_STATUS"
 
 # Rebuild the entire annotation table
 TABLE_HEADER="### Cache Volume Benchmark Results
@@ -91,9 +92,9 @@ TABLE_ROWS=""
 for ((step=1; step<=STEP_NUMBER; step++)); do
   STEP_DATA=$(buildkite-agent meta-data get "benchmark-step-$step" 2>/dev/null || echo "")
   if [ -n "$STEP_DATA" ]; then
-    IFS='|' read -r step_num sleep_display duration cache_age cache_status <<< "$STEP_DATA"
+    IFS='|' read -r step_num sleep_display duration_display cache_age cache_status <<< "$STEP_DATA"
     TABLE_ROWS="${TABLE_ROWS}
-| npm install #$step_num | $sleep_display | ${duration}s | $cache_age | $cache_status |"
+| \`npm install #$step_num\` | $sleep_display | $duration_display | $cache_age | $cache_status |"
   fi
 done
 

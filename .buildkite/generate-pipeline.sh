@@ -32,7 +32,7 @@ for i in $(seq 1 ${REPEAT}); do
   cat >> pipeline.yml <<STEP
   - label: "${LABEL}"
     key: install-${i}
-    command: "./.buildkite/benchmark-step.sh ${i} ${CACHE_SLEEP}"
+    command: "./.buildkite/benchmark-step.sh ${i} ${CACHE_SLEEP} ${REPEAT}"
 STEP
   
   # Add wait after each install

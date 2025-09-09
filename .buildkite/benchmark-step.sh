@@ -3,6 +3,7 @@ set -euo pipefail
 
 STEP_NUMBER=${1:-1}
 CACHE_SLEEP=${2:-60}
+TOTAL_STEPS=${3:-5}
 PREVIOUS_STEP_NUMBER=$((STEP_NUMBER - 1))
 
 mkdir -p cache-meta
@@ -34,7 +35,13 @@ else
   LAST_TOUCHED_TIME=$(stat -c %Y "cache-meta/$LATEST_FILE")
   LAST_TOUCHED=$(stat -c %y "cache-meta/$LATEST_FILE" | cut -d' ' -f2 | cut -d'.' -f1)
   AGE_SECONDS=$((CURRENT_TIME - LAST_TOUCHED_TIME))
-  CACHE_STATUS="🧊 \`Cool\` \`build: $LATEST_BUILD\` \`step: npm install #$LATEST_STEP\` \`touched: $LAST_TOUCHED\` \`age: ${AGE_SECONDS}s\`"
+  
+  # Check if this is the last step from a previous build (which should be considered Hot)
+  if [ "$LATEST_STEP" -eq "$TOTAL_STEPS" ]; then
+    CACHE_STATUS="🔥 \`Hot\` \`build: $LATEST_BUILD\` \`step: npm install #$LATEST_STEP\` (last step) \`touched: $LAST_TOUCHED\` \`age: ${AGE_SECONDS}s\`"
+  else
+    CACHE_STATUS="🧊 \`Cool\` \`build: $LATEST_BUILD\` \`step: npm install #$LATEST_STEP\` \`touched: $LAST_TOUCHED\` \`age: ${AGE_SECONDS}s\`"
+  fi
 fi
 
 touch "cache-meta/build-$BUILDKITE_BUILD_NUMBER-step-install-$STEP_NUMBER"

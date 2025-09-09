@@ -20,7 +20,7 @@ env:
 steps:
   - label: ":clipboard: Initialize benchmark results"
     command: |
-      buildkite-agent annotate --context "cache-benchmark" --style "info" $'### Cache Volume Benchmark Results\n\n| Step | Duration | Cache Status |\n|------|----------|--------------|'
+      buildkite-agent annotate --context "cache-benchmark" --style "info" $'### Cache Volume Benchmark Results\n\n| Step | Sleep | Duration | Cache Status |\n|------|-------|----------|--------------|'
   - wait
 PIPELINE
 
@@ -32,7 +32,7 @@ for i in $(seq 1 ${REPEAT}); do
   cat >> pipeline.yml <<STEP
   - label: "${LABEL}"
     key: install-${i}
-    command: "./.buildkite/benchmark-step.sh ${i}"
+    command: "./.buildkite/benchmark-step.sh ${i} ${CACHE_SLEEP}"
 STEP
   
   # Add wait after each install

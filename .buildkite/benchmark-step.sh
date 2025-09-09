@@ -2,6 +2,7 @@
 set -euo pipefail
 
 STEP_NUMBER=${1:-1}
+CACHE_SLEEP=${2:-60}
 PREVIOUS_STEP_NUMBER=$((STEP_NUMBER - 1))
 
 mkdir -p cache-meta
@@ -11,21 +12,21 @@ PREVIOUS_STEP_FILE="build-$BUILDKITE_BUILD_NUMBER-step-install-$PREVIOUS_STEP_NU
 
 EXISTING_FILES=$(ls cache-meta/ 2>/dev/null || true)
 if [ -z "$EXISTING_FILES" ]; then
-  CACHE_STATUS="🔴 Cold (no cache)"
+  CACHE_STATUS="🔴 Cold"
 elif [ -f "cache-meta/$PREVIOUS_STEP_FILE" ]; then
   LAST_TOUCHED=$(stat -c %y "cache-meta/$PREVIOUS_STEP_FILE" | cut -d' ' -f2 | cut -d'.' -f1)
-  CACHE_STATUS="🟢 Hot ($PREVIOUS_STEP_FILE at $LAST_TOUCHED)"
+  CACHE_STATUS="🟢 Hot (step #$PREVIOUS_STEP_NUMBER at $LAST_TOUCHED)"
 elif ls cache-meta/build-$BUILDKITE_BUILD_NUMBER-step-* 2>/dev/null >/dev/null; then
   LATEST_FILE=$(ls -t cache-meta/build-$BUILDKITE_BUILD_NUMBER-step-* 2>/dev/null | head -1)
-  LATEST_NAME=$(basename "$LATEST_FILE")
+  LATEST_STEP=$(basename "$LATEST_FILE" | sed 's/build-[0-9]*-step-install-//')
   LAST_TOUCHED=$(stat -c %y "$LATEST_FILE" | cut -d' ' -f2 | cut -d'.' -f1)
-  SAME_BUILD_FILES=$(ls cache-meta/build-$BUILDKITE_BUILD_NUMBER-step-* 2>/dev/null | wc -l)
-  CACHE_STATUS="🔵 Warm ($LATEST_NAME at $LAST_TOUCHED, $SAME_BUILD_FILES steps)"
+  CACHE_STATUS="🔵 Warm (step #$LATEST_STEP at $LAST_TOUCHED)"
 else
   LATEST_FILE=$(ls -t cache-meta/ 2>/dev/null | head -1)
+  LATEST_BUILD=$(basename "$LATEST_FILE" | sed 's/build-\([0-9]*\)-step-install-.*/\1/')
+  LATEST_STEP=$(basename "$LATEST_FILE" | sed 's/build-[0-9]*-step-install-//')
   LAST_TOUCHED=$(stat -c %y "cache-meta/$LATEST_FILE" | cut -d' ' -f2 | cut -d'.' -f1)
-  PREV_BUILD_FILES=$(ls cache-meta/ 2>/dev/null | wc -l)
-  CACHE_STATUS="🟠 Cool ($LATEST_FILE at $LAST_TOUCHED, $PREV_BUILD_FILES files)"
+  CACHE_STATUS="🟠 Cool (build #$LATEST_BUILD step #$LATEST_STEP at $LAST_TOUCHED)"
 fi
 
 touch "cache-meta/build-$BUILDKITE_BUILD_NUMBER-step-install-$STEP_NUMBER"
@@ -59,25 +60,22 @@ npm install
 END_TIME=$(date +%s)
 DURATION=$((END_TIME - START_TIME))
 
-# Update cache status to include current job duration
-CACHE_STATUS_WITH_DURATION="$CACHE_STATUS (${DURATION}s)"
-
-# Store results in build metadata for table reconstruction
-buildkite-agent meta-data set "benchmark-step-$STEP_NUMBER" "$STEP_NUMBER|$DURATION|$CACHE_STATUS_WITH_DURATION"
+# Store results in build metadata for table reconstruction  
+buildkite-agent meta-data set "benchmark-step-$STEP_NUMBER" "$STEP_NUMBER|$CACHE_SLEEP|$DURATION|$CACHE_STATUS"
 
 # Rebuild the entire annotation table
 TABLE_HEADER="### Cache Volume Benchmark Results
 
-| Step | Duration | Cache Status |
-|------|----------|--------------|"
+| Step | Sleep | Duration | Cache Status |
+|------|-------|----------|--------------|"
 
 TABLE_ROWS=""
 for ((step=1; step<=STEP_NUMBER; step++)); do
   STEP_DATA=$(buildkite-agent meta-data get "benchmark-step-$step" 2>/dev/null || echo "")
   if [ -n "$STEP_DATA" ]; then
-    IFS='|' read -r step_num duration cache_status <<< "$STEP_DATA"
+    IFS='|' read -r step_num sleep_duration duration cache_status <<< "$STEP_DATA"
     TABLE_ROWS="${TABLE_ROWS}
-| npm install #$step_num | ${duration}s | $cache_status |"
+| npm install #$step_num | ${sleep_duration}s | ${duration}s | $cache_status |"
   fi
 done
 

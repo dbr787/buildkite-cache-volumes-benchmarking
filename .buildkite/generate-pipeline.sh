@@ -10,7 +10,7 @@ echo "Generating pipeline with ${REPEAT} npm install steps and ${CACHE_SLEEP} se
 # Start building the pipeline
 cat > pipeline.yml <<'PIPELINE'
 cache:
-  name: "cold-warm-example"
+  name: "buildkite-cache-volumes-benchmarking"
   paths:
     - node_modules
     - .npm
@@ -22,11 +22,7 @@ PIPELINE
 
 # Generate npm install steps with sleeps between them
 for i in $(seq 1 ${REPEAT}); do
-  if [ ${i} -eq 1 ]; then
-    LABEL=":snowflake: npm install #${i} (cold)"
-  else
-    LABEL=":fire: npm install #${i} (warm)"
-  fi
+  LABEL=":package: npm install #${i}"
   
   # Add npm install step
   cat >> pipeline.yml <<STEP
@@ -60,18 +56,15 @@ for i in $(seq 1 ${REPEAT}); do
       npm install
 STEP
   
-  # Add wait after each install
-  echo "  - wait" >> pipeline.yml
-  
   # Add sleep between installs (but not after the last one)
   if [ ${i} -lt ${REPEAT} ]; then
     cat >> pipeline.yml <<SLEEP
-  - label: ":hourglass: Cache sleep #${i}"
+  - wait
+  - label: ":hourglass: cache sleep #${i}"
     key: sleep-${i}
     command: |
       echo "Sleeping for ${CACHE_SLEEP} seconds..."
       sleep ${CACHE_SLEEP}
-  - wait
 SLEEP
   fi
 done

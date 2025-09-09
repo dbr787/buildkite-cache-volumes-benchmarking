@@ -6,7 +6,7 @@ steps:
     fields:
       - text: "Number of npm install repetitions"
         key: "repeat"
-        default: "2"
+        default: "5"
         hint: "How many times to run npm install"
       - text: "Cache Sleep (seconds)"
         key: "cache_sleep"

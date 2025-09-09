@@ -20,10 +20,7 @@ env:
 steps:
   - label: ":clipboard: Initialize benchmark results"
     command: |
-      buildkite-agent annotate --context "cache-benchmark" --style "info" "## Cache Volume Benchmark Results
-
-| Step | Duration | Cache Status |
-|------|----------|--------------|"
+      buildkite-agent annotate --context "cache-benchmark" --style "info" "## Cache Volume Benchmark Results\n\n| Step | Duration | Cache Status |\n|------|----------|--------------|"
   - wait
 PIPELINE
 

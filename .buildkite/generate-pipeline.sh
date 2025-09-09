@@ -93,8 +93,7 @@ for i in $(seq 1 ${REPEAT}); do
       CACHE_STATUS_WITH_DURATION="\${CACHE_STATUS} (\${DURATION}s)"
       
       # Update annotation with results
-      buildkite-agent annotate --context "cache-benchmark" --style "info" "
-| npm install #${i} | \${DURATION}s | \${CACHE_STATUS_WITH_DURATION} |" --append
+      buildkite-agent annotate --context "cache-benchmark" --style "info" "| npm install #${i} | \${DURATION}s | \${CACHE_STATUS_WITH_DURATION} |" --append
 STEP
   
   # Add wait after each install

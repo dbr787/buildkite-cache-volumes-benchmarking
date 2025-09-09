@@ -19,6 +19,14 @@ env:
   NPM_CONFIG_CACHE: ".npm"
 steps:
   - wait
+  - label: ":clipboard: Initialize benchmark results"
+    command: |
+      buildkite-agent annotate --context "cache-benchmark" --style "info" "
+      ## Cache Volume Benchmark Results
+
+      | Step | Duration | Cache Status |
+      |------|----------|--------------|
+      " --append
 PIPELINE
 
 # Generate npm install steps with sleeps between them
@@ -31,8 +39,33 @@ for i in $(seq 1 ${REPEAT}); do
     key: install-${i}
     command: |
       mkdir -p cache-meta
+      
+      # Check cache status based on existing cache-meta files
+      CURRENT_BUILD="\${BUILDKITE_BUILD_NUMBER}"
+      PREVIOUS_STEP_FILE="build-\${CURRENT_BUILD}-step-install-$((${i}-1))"
+      
+      EXISTING_FILES=\$(ls cache-meta/ 2>/dev/null || true)
+      if [ -z "\${EXISTING_FILES}" ]; then
+        CACHE_STATUS="🔴 Cold (no cache)"
+      elif [ -f "cache-meta/\${PREVIOUS_STEP_FILE}" ]; then
+        LAST_TOUCHED=\$(stat -c %y "cache-meta/\${PREVIOUS_STEP_FILE}" | cut -d' ' -f2 | cut -d'.' -f1)
+        CACHE_STATUS="🟢 Hot (\${PREVIOUS_STEP_FILE} at \${LAST_TOUCHED})"
+      elif ls cache-meta/build-\${CURRENT_BUILD}-step-* 2>/dev/null >/dev/null; then
+        LATEST_FILE=\$(ls -t cache-meta/build-\${CURRENT_BUILD}-step-* 2>/dev/null | head -1)
+        LATEST_NAME=\$(basename "\${LATEST_FILE}")
+        LAST_TOUCHED=\$(stat -c %y "\${LATEST_FILE}" | cut -d' ' -f2 | cut -d'.' -f1)
+        SAME_BUILD_FILES=\$(ls cache-meta/build-\${CURRENT_BUILD}-step-* 2>/dev/null | wc -l)
+        CACHE_STATUS="🔵 Warm (\${LATEST_NAME} at \${LAST_TOUCHED}, \${SAME_BUILD_FILES} steps)"
+      else
+        LATEST_FILE=\$(ls -t cache-meta/ 2>/dev/null | head -1)
+        LAST_TOUCHED=\$(stat -c %y "cache-meta/\${LATEST_FILE}" | cut -d' ' -f2 | cut -d'.' -f1)
+        PREV_BUILD_FILES=\$(ls cache-meta/ 2>/dev/null | wc -l)
+        CACHE_STATUS="🟠 Cool (\${LATEST_FILE} at \${LAST_TOUCHED}, \${PREV_BUILD_FILES} files)"
+      fi
+      
       touch "cache-meta/build-\${BUILDKITE_BUILD_NUMBER}-step-install-${i}"
       ls -lt cache-meta
+      
       cat > package.json <<'JSON'
       {
         "name": "demo",
@@ -54,7 +87,20 @@ for i in $(seq 1 ${REPEAT}); do
         }
       }
       JSON
+      
+      # Time the npm install
+      START_TIME=\$(date +%s)
       npm install
+      END_TIME=\$(date +%s)
+      DURATION=\$((END_TIME - START_TIME))
+      
+      # Update cache status to include current job duration
+      CACHE_STATUS_WITH_DURATION="\${CACHE_STATUS} (\${DURATION}s)"
+      
+      # Update annotation with results
+      buildkite-agent annotate --context "cache-benchmark" --style "info" "
+      | npm install #${i} | \${DURATION}s | \${CACHE_STATUS_WITH_DURATION} |
+      " --append
 STEP
   
   # Add wait after each install

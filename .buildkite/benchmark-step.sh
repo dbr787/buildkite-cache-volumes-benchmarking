@@ -62,5 +62,24 @@ DURATION=$((END_TIME - START_TIME))
 # Update cache status to include current job duration
 CACHE_STATUS_WITH_DURATION="$CACHE_STATUS (${DURATION}s)"
 
-# Update annotation with results
-printf '\n| npm install #%d | %ds | %s |\n' "$STEP_NUMBER" "$DURATION" "$CACHE_STATUS_WITH_DURATION" | buildkite-agent annotate --context "cache-benchmark" --style "info" --append
+# Store results in build metadata for table reconstruction
+buildkite-agent meta-data set "benchmark-step-$STEP_NUMBER" "$STEP_NUMBER|$DURATION|$CACHE_STATUS_WITH_DURATION"
+
+# Rebuild the entire annotation table
+TABLE_HEADER="### Cache Volume Benchmark Results
+
+| Step | Duration | Cache Status |
+|------|----------|--------------|"
+
+TABLE_ROWS=""
+for ((step=1; step<=STEP_NUMBER; step++)); do
+  STEP_DATA=$(buildkite-agent meta-data get "benchmark-step-$step" 2>/dev/null || echo "")
+  if [ -n "$STEP_DATA" ]; then
+    IFS='|' read -r step_num duration cache_status <<< "$STEP_DATA"
+    TABLE_ROWS="${TABLE_ROWS}
+| npm install #$step_num | ${duration}s | $cache_status |"
+  fi
+done
+
+# Update the complete annotation
+printf '%s%s' "$TABLE_HEADER" "$TABLE_ROWS" | buildkite-agent annotate --context "cache-benchmark" --style "info"

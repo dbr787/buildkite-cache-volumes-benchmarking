@@ -56,15 +56,18 @@ for i in $(seq 1 ${REPEAT}); do
       npm install
 STEP
   
+  # Add wait after each install
+  echo "  - wait" >> pipeline.yml
+  
   # Add sleep between installs (but not after the last one)
   if [ ${i} -lt ${REPEAT} ]; then
     cat >> pipeline.yml <<SLEEP
-  - wait
   - label: ":hourglass: cache sleep #${i}"
     key: sleep-${i}
     command: |
       echo "Sleeping for ${CACHE_SLEEP} seconds..."
       sleep ${CACHE_SLEEP}
+  - wait
 SLEEP
   fi
 done

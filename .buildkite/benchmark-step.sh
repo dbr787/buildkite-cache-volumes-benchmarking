@@ -14,14 +14,14 @@ EXISTING_FILES=$(ls cache-meta/ 2>/dev/null || true)
 CURRENT_TIME=$(date +%s)
 
 if [ -z "$EXISTING_FILES" ]; then
-  CACHE_STATUS="🔴 Cold"
+  CACHE_STATUS="❄️ Cold"
   CACHE_AGE="N/A"
 elif [ -f "cache-meta/$PREVIOUS_STEP_FILE" ]; then
   LAST_TOUCHED_TIME=$(stat -c %Y "cache-meta/$PREVIOUS_STEP_FILE")
   LAST_TOUCHED=$(stat -c %y "cache-meta/$PREVIOUS_STEP_FILE" | cut -d' ' -f2 | cut -d'.' -f1)
   AGE_SECONDS=$((CURRENT_TIME - LAST_TOUCHED_TIME))
   CACHE_AGE="${AGE_SECONDS}s"
-  CACHE_STATUS="🟢 Hot \`build: $BUILDKITE_BUILD_NUMBER\` \`step: npm install #$PREVIOUS_STEP_NUMBER\` at $LAST_TOUCHED"
+  CACHE_STATUS="🔥 Hot \`build: $BUILDKITE_BUILD_NUMBER\` \`step: npm install #$PREVIOUS_STEP_NUMBER\` \`touched: $LAST_TOUCHED\`"
 elif ls cache-meta/build-$BUILDKITE_BUILD_NUMBER-step-* 2>/dev/null >/dev/null; then
   LATEST_FILE=$(ls -t cache-meta/build-$BUILDKITE_BUILD_NUMBER-step-* 2>/dev/null | head -1)
   LATEST_STEP=$(basename "$LATEST_FILE" | sed 's/build-[0-9]*-step-install-//')
@@ -29,7 +29,7 @@ elif ls cache-meta/build-$BUILDKITE_BUILD_NUMBER-step-* 2>/dev/null >/dev/null; 
   LAST_TOUCHED=$(stat -c %y "$LATEST_FILE" | cut -d' ' -f2 | cut -d'.' -f1)
   AGE_SECONDS=$((CURRENT_TIME - LAST_TOUCHED_TIME))
   CACHE_AGE="${AGE_SECONDS}s"
-  CACHE_STATUS="🔵 Warm \`build: $BUILDKITE_BUILD_NUMBER\` \`step: npm install #$LATEST_STEP\` at $LAST_TOUCHED"
+  CACHE_STATUS="☀️ Warm \`build: $BUILDKITE_BUILD_NUMBER\` \`step: npm install #$LATEST_STEP\` \`touched: $LAST_TOUCHED\`"
 else
   LATEST_FILE=$(ls -t cache-meta/ 2>/dev/null | head -1)
   LATEST_BUILD=$(basename "$LATEST_FILE" | sed 's/build-\([0-9]*\)-step-install-.*/\1/')
@@ -38,7 +38,7 @@ else
   LAST_TOUCHED=$(stat -c %y "cache-meta/$LATEST_FILE" | cut -d' ' -f2 | cut -d'.' -f1)
   AGE_SECONDS=$((CURRENT_TIME - LAST_TOUCHED_TIME))
   CACHE_AGE="${AGE_SECONDS}s"
-  CACHE_STATUS="🟠 Cool \`build: $LATEST_BUILD\` \`step: npm install #$LATEST_STEP\` at $LAST_TOUCHED"
+  CACHE_STATUS="🧊 Cool \`build: $LATEST_BUILD\` \`step: npm install #$LATEST_STEP\` \`touched: $LAST_TOUCHED\`"
 fi
 
 touch "cache-meta/build-$BUILDKITE_BUILD_NUMBER-step-install-$STEP_NUMBER"

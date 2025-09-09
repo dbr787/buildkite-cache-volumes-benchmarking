@@ -18,15 +18,13 @@ cache:
 env:
   NPM_CONFIG_CACHE: ".npm"
 steps:
-  - wait
   - label: ":clipboard: Initialize benchmark results"
     command: |
-      buildkite-agent annotate --context "cache-benchmark" --style "info" "
-      ## Cache Volume Benchmark Results
+      buildkite-agent annotate --context "cache-benchmark" --style "info" "## Cache Volume Benchmark Results
 
-      | Step | Duration | Cache Status |
-      |------|----------|--------------|
-      " --append
+| Step | Duration | Cache Status |
+|------|----------|--------------|"
+  - wait
 PIPELINE
 
 # Generate npm install steps with sleeps between them
@@ -99,8 +97,7 @@ for i in $(seq 1 ${REPEAT}); do
       
       # Update annotation with results
       buildkite-agent annotate --context "cache-benchmark" --style "info" "
-      | npm install #${i} | \${DURATION}s | \${CACHE_STATUS_WITH_DURATION} |
-      " --append
+| npm install #${i} | \${DURATION}s | \${CACHE_STATUS_WITH_DURATION} |" --append
 STEP
   
   # Add wait after each install

@@ -18,6 +18,7 @@ cache:
 env:
   NPM_CONFIG_CACHE: ".npm"
 steps:
+  - wait
 PIPELINE
 
 # Generate npm install steps with sleeps between them
@@ -30,7 +31,7 @@ for i in $(seq 1 ${REPEAT}); do
     key: install-${i}
     command: |
       mkdir -p cache-meta
-      touch "cache-meta/build-\${BUILDKITE_BUILD_NUMBER}-step-\${BUILDKITE_STEP_KEY}"
+      touch "cache-meta/build-\${BUILDKITE_BUILD_NUMBER}-step-install-${i}"
       ls -lt cache-meta
       cat > package.json <<'JSON'
       {

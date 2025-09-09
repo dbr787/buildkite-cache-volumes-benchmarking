@@ -39,8 +39,9 @@ else
   LAST_TOUCHED=$(stat -c %y "cache-meta/$LATEST_FILE" | cut -d' ' -f2 | cut -d'.' -f1)
   AGE_SECONDS=$((CURRENT_TIME - LAST_TOUCHED_TIME))
   
-  # Check if this is the last step from a previous build (which should be considered Hot)
-  if [ "$LATEST_STEP" -eq "$TOTAL_STEPS" ]; then
+  # Check if this is step 1 of current build AND cache is from last step of immediate previous build (Hot scenario)
+  IMMEDIATE_PREVIOUS_BUILD=$((BUILDKITE_BUILD_NUMBER - 1))
+  if [ "$STEP_NUMBER" -eq 1 ] && [ "$LATEST_BUILD" -eq "$IMMEDIATE_PREVIOUS_BUILD" ] && [ "$LATEST_STEP" -eq "$TOTAL_STEPS" ]; then
     CACHE_STATUS="🔥 \`Hot\` \`build: $LATEST_BUILD\` \`step: npm install #$LATEST_STEP (last step)\` \`touched: $LAST_TOUCHED\` \`age: ${AGE_SECONDS}s\`"
   else
     CACHE_STATUS="🧊 \`Cool\` \`build: $LATEST_BUILD\` \`step: npm install #$LATEST_STEP\` \`touched: $LAST_TOUCHED\` \`age: ${AGE_SECONDS}s\`"

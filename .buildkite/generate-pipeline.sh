@@ -10,7 +10,7 @@ echo "Generating pipeline with ${REPEAT} npm install steps and ${CACHE_SLEEP} se
 # Start building the pipeline
 cat > pipeline.yml <<'PIPELINE'
 cache:
-  name: "buildkite-cache-volumes-benchmarking"
+  name: "buildkite-cache-volumes-benchmarking-${BUILDKITE_BRANCH%%/*}"
   paths:
     - node_modules
     - .npm

@@ -1,5 +1,5 @@
-name: "Cache Volumes Benchmarking"
-description: "Benchmark npm install performance with cache volumes"
+name: "Cache Volumes Example"
+description: "Simple npm install cache hit/miss demonstration"
 steps:
-  - label: "🚀 Generate simple benchmark pipeline"
-    command: "./.buildkite/generate-pipeline.sh"
+  - label: "🚀 Run cache example"
+    command: "buildkite-agent pipeline upload .buildkite/pipeline.yml"

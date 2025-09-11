@@ -1,42 +1,47 @@
-# Buildkite Cache Volumes Benchmarking
+# Buildkite Cache Volumes Example
 
-[![Add to Buildkite](https://buildkite.com/button.svg)](https://buildkite.com/new?template=https://github.com/dbr787/buildkite-cache-volumes-benchmarking)
+[![Add to Buildkite](https://buildkite.com/button.svg)](https://buildkite.com/new?template=https://github.com/dbr787/buildkite-cache-volumes-example)
 
-A simple tool to benchmark Buildkite's cache volumes by measuring npm install performance with and without cached dependencies.
+A simple example demonstrating Buildkite's cache volumes by showing npm install performance with and without cached dependencies.
 
 ## Quick Test
 
 1. Create a Buildkite pipeline pointing to this repository  
-2. Trigger a build - first build shows ❄️ **Cold** cache (60+ seconds)
-3. Trigger another build - subsequent builds show ☀️ **Warm** cache (5-10 seconds)
+2. Trigger a build - first build shows 💨 **Cache Miss** (60+ seconds)
+3. Trigger another build - subsequent builds show 🎯 **Cache Hit** (5-10 seconds)
 
 ## How it works
 
-The pipeline runs a single npm install step and measures:
-- **Duration**: How long npm install takes
-- **Cache status**: Cold (no cache) vs Warm (cache hit) 
-- **Build tracking**: Shows which build last used the cache
+The pipeline runs a single npm install step that:
+- **Creates a package.json** with common React/Next.js dependencies
+- **Checks for cached node_modules** before running npm install
+- **Shows cache status** in a simple results table
 
-Results appear in a clean annotation table showing the performance difference.
+Results appear as an annotation showing whether the build was a cache hit or miss.
 
 ## What you'll see
 
 **First build**: 
 ```
-❄️ Cold | 62s | No previous cache
+| Build | Status |
+|-------|--------|
+| #123  | 💨 Cache Miss |
 ```
 
 **Subsequent builds**:
 ```
-☀️ Warm | 8s | Cache from: build-123-step-1  
+| Build | Status |
+|-------|--------|
+| #124  | 🎯 Cache Hit |
 ```
 
-## Cache sharing
+## Cache behavior
 
-All branches share the same cache volume - this demonstrates real-world usage where feature branches benefit from main branch's cached dependencies.
+- **Cache Miss**: No `node_modules` exists, npm downloads and installs everything (~60s)
+- **Cache Hit**: `node_modules` exists from previous builds, npm skips most work (~5-10s)
+- **Shared across branches**: All branches use the same cache for realistic performance
 
 ## Files
 
-- `.buildkite/pipeline.yml` - Main pipeline entry point
-- `.buildkite/generate-pipeline.sh` - Generates the benchmark pipeline  
-- `.buildkite/template.yml` - Multi-step version for advanced testing
+- `.buildkite/pipeline.yml` - The complete cache example pipeline
+- `.buildkite/template.yml` - Template for "Add to Buildkite" button

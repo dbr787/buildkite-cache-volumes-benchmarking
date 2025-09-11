@@ -7,8 +7,10 @@ A simple example demonstrating Buildkite's cache volumes by showing npm install 
 ## Quick Test
 
 1. Create a Buildkite pipeline pointing to this repository  
-2. Trigger a build - first build shows 💨 **Cache Miss** (60+ seconds)
-3. Trigger another build - subsequent builds show 🎯 **Cache Hit** (5-10 seconds)
+2. Trigger a build - first build shows 💨 **Cache Miss** (90+ seconds)
+3. Trigger 2-3 more builds - you should see 🎯 **Cache Hit** (10-15 seconds)
+
+**Note:** Cache hits may not appear immediately as Buildkite's distributed cache system needs time to populate across the agent fleet. Run several builds to see the full caching effect.
 
 ## How it works
 
@@ -37,9 +39,10 @@ Results appear as an annotation showing whether the build was a cache hit or mis
 
 ## Cache behavior
 
-- **Cache Miss**: No `node_modules` exists, npm downloads and installs everything (~60s)
-- **Cache Hit**: `node_modules` exists from previous builds, npm skips most work (~5-10s)
+- **Cache Miss**: No `node_modules` exists, npm downloads and installs 20+ packages (~90-120s)
+- **Cache Hit**: `node_modules` exists from previous builds, npm skips most work (~10-15s)
 - **Shared across branches**: All branches use the same cache for realistic performance
+- **Distributed system**: Cache volumes may take 2-3 builds to fully populate across agent infrastructure
 
 ## Files
 

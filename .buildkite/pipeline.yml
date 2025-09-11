@@ -11,8 +11,10 @@ steps:
       # Check cache status 
       if [ -d "node_modules" ] && [ "$$(ls -A node_modules 2>/dev/null)" ]; then
         CACHE_STATUS="🎯 Cache Hit"
+        STYLE="success"
       else
         CACHE_STATUS="💨 Cache Miss"
+        STYLE="warning"
       fi
       
       # Create package.json and run npm install
@@ -26,16 +28,38 @@ steps:
           "react-dom": "18.3.1",
           "typescript": "5.6.2",
           "webpack": "5.93.0",
-          "tailwindcss": "3.4.10"
+          "tailwindcss": "3.4.10",
+          "postcss": "8.4.45",
+          "autoprefixer": "10.4.19",
+          "prisma": "5.17.0",
+          "sharp": "0.33.4",
+          "puppeteer": "23.4.1",
+          "lodash": "4.17.21",
+          "axios": "1.7.4",
+          "date-fns": "3.6.0",
+          "zod": "3.23.8",
+          "framer-motion": "11.3.28",
+          "@types/node": "22.5.0",
+          "@types/react": "18.3.5",
+          "@types/react-dom": "18.3.0",
+          "eslint": "9.9.0",
+          "eslint-config-next": "14.2.5"
         }
       }
       JSON
       
+      # Time the npm install
+      START_TIME=$$(date +%s)
       npm install
+      END_TIME=$$(date +%s)
+      DURATION=$$((END_TIME - START_TIME))
       
-      # Show results
-      buildkite-agent annotate --context "cache-example" --style "info" "### Cache Example Result
+      # Get node_modules size
+      if [ -d "node_modules" ]; then
+        NODE_MODULES_SIZE=$$(du -sh node_modules | cut -f1)
+      else
+        NODE_MODULES_SIZE="0B"
+      fi
       
-      | Build | Status |
-      |-------|--------|
-      | \`#$$BUILDKITE_BUILD_NUMBER\` | $$CACHE_STATUS |"
+      # Show results with timing and size info
+      buildkite-agent annotate --context "cache-example" --style "$$STYLE" "$$CACHE_STATUS \`node_modules: $$NODE_MODULES_SIZE\` \`duration: $${DURATION}s\`"

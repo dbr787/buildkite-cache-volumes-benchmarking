@@ -23,27 +23,15 @@ steps:
         "name": "demo",
         "version": "1.0.0",
         "dependencies": {
-          "next": "14.2.5",
-          "react": "18.3.1",
-          "react-dom": "18.3.1",
-          "typescript": "5.6.2",
-          "webpack": "5.93.0",
-          "tailwindcss": "3.4.10",
-          "postcss": "8.4.45",
-          "autoprefixer": "10.4.19",
-          "prisma": "5.17.0",
-          "sharp": "0.33.4",
-          "puppeteer": "23.4.1",
-          "lodash": "4.17.21",
-          "axios": "1.7.4",
-          "date-fns": "3.6.0",
-          "zod": "3.23.8",
-          "framer-motion": "11.3.28",
-          "@types/node": "22.5.0",
-          "@types/react": "18.3.5",
-          "@types/react-dom": "18.3.0",
-          "eslint": "8.57.0",
-          "eslint-config-next": "14.2.5"
+          "@tensorflow/tfjs": "4.20.0",
+          "@playwright/test": "1.47.0",
+          "firebase": "10.12.5",
+          "aws-sdk": "2.1679.0",
+          "@storybook/react": "8.2.9",
+          "@babel/core": "7.25.2",
+          "cypress": "13.13.3",
+          "electron": "31.4.0",
+          "webpack-dev-server": "5.0.4"
         }
       }
       JSON
@@ -62,4 +50,6 @@ steps:
       fi
       
       # Show results with timing and size info
-      buildkite-agent annotate --context "cache-example" --style "$$STYLE" "$$CACHE_STATUS \`node_modules: $$NODE_MODULES_SIZE\` \`duration: $${DURATION}s\`"
+      buildkite-agent annotate --context "cache-example" --style "$$STYLE" "$$CACHE_STATUS
+      \`node_modules: $$NODE_MODULES_SIZE\`
+      \`duration: $${DURATION}s\`"

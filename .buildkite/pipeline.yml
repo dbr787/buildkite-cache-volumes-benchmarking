@@ -1,0 +1,41 @@
+cache:
+  name: "buildkite-cache-volumes-example"
+  paths:
+    - node_modules
+    - .npm
+env:
+  NPM_CONFIG_CACHE: ".npm"
+steps:
+  - label: ":package: npm install example"
+    command: |
+      # Check cache status 
+      if [ -d "node_modules" ] && [ "$$(ls -A node_modules 2>/dev/null)" ]; then
+        CACHE_STATUS="🎯 Cache Hit"
+      else
+        CACHE_STATUS="💨 Cache Miss"
+      fi
+      
+      # Create package.json and run npm install
+      cat > package.json <<'JSON'
+      {
+        "name": "demo",
+        "version": "1.0.0",
+        "dependencies": {
+          "next": "14.2.5",
+          "react": "18.3.1",
+          "react-dom": "18.3.1",
+          "typescript": "5.6.2",
+          "webpack": "5.93.0",
+          "tailwindcss": "3.4.10"
+        }
+      }
+      JSON
+      
+      npm install
+      
+      # Show results
+      buildkite-agent annotate --context "cache-example" --style "info" "### Cache Example Result
+      
+      | Build | Status |
+      |-------|--------|
+      | \`#$$BUILDKITE_BUILD_NUMBER\` | $$CACHE_STATUS |"

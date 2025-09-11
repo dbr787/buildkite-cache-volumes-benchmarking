@@ -2,4 +2,7 @@ name: "Cache Volumes Example"
 description: "Simple npm install cache hit/miss demonstration"
 steps:
   - label: "🚀 Run cache example"
-    command: "buildkite-agent pipeline upload .buildkite/pipeline.yml"
+    command: |
+      pwd
+      ls -la .buildkite/
+      buildkite-agent pipeline upload .buildkite/pipeline.yml

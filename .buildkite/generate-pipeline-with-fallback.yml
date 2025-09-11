@@ -7,20 +7,15 @@ CACHE_SLEEP=$(buildkite-agent meta-data get "cache_sleep")
 
 echo "Generating pipeline with ${REPEAT} npm install steps and ${CACHE_SLEEP} second sleeps"
 
-# Start building the pipeline
+# Start building the pipeline - NO automatic cache mounting
 cat > pipeline.yml <<'PIPELINE'
-cache:
-  name: "buildkite-cache-volumes-benchmarking"
-  paths:
-    - node_modules
-    - .npm
-    - cache-meta
+# No automatic cache - we'll manage it manually with symbolic links
 env:
   NPM_CONFIG_CACHE: ".npm"
 steps:
   - label: ":clipboard: Initialize benchmark results"
     command: |
-      buildkite-agent annotate --context "cache-benchmark" --style "info" $'### Cache Volume Benchmark Results\n\n| Step | Started | Sleep | Duration | Cache Status |\n|------|---------|-------|----------|--------------|'
+      buildkite-agent annotate --context "cache-benchmark" --style "info" $'### Cache Volume Benchmark Results (Manual Cache Management)\n\n| Step | Started | Sleep | Duration | Cache Status |\n|------|---------|-------|----------|--------------|'
   - wait
 PIPELINE
 
@@ -32,7 +27,7 @@ for i in $(seq 1 ${REPEAT}); do
   cat >> pipeline.yml <<STEP
   - label: "${LABEL}"
     key: install-${i}
-    command: "./.buildkite/benchmark-step.sh ${i} ${CACHE_SLEEP} ${REPEAT}"
+    command: "./.buildkite/benchmark-step-with-fallback.sh ${i} ${CACHE_SLEEP} ${REPEAT}"
 STEP
   
   # Add wait after each install
